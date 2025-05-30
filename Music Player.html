@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Music Player</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .player {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    #playlist {
+      list-style: none;
+      padding: 0;
+      margin-top: 20px;
+    }
+
+    #playlist li {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    #playlist li.active {
+      background-color: #e0e0e0;
+    }
+
+    .controls {
+      margin-top: 10px;
+    }
+
+    .controls button {
+      margin: 5px;
+      padding: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    input[type="range"] {
+      width: 100px;
+      vertical-align: middle;
+    }
+
+    input[type="text"] {
+      width: 80%;
+      padding: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="player">
+    <h1>Music Player</h1>
+
+    <input type="file" id="upload" multiple accept="audio/*" /><br /><br />
+    <input type="text" id="search" placeholder="Search by artist or genre" />
+
+    <ul id="playlist"></ul>
+
+    <audio id="audio" controls></audio>
+
+    <div class="controls">
+      <button id="prev">⏮</button>
+      <button id="play">▶️/⏸</button>
+      <button id="next">⏭</button>
+      <input type="range" id="volume" min="0" max="1" step="0.1" />
+    </div>
+  </div>
+
+  <script>
+    const upload = document.getElementById('upload');
+    const playlistUI = document.getElementById('playlist');
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('play');
+    const nextBtn = document.getElementById('next');
+    const prevBtn = document.getElementById('prev');
+    const volume = document.getElementById('volume');
+    const search = document.getElementById('search');
+
+    let playlist = [];
+    let currentIndex = 0;
+
+    upload.addEventListener('change', function () {
+      const files = Array.from(this.files);
+      files.forEach(file => {
+        playlist.push({
+          name: file.name,
+          url: URL.createObjectURL(file),
+          artist: "Unknown",
+          genre: "Unknown"
+        });
+      });
+      renderPlaylist(playlist);
+    });
+
+    function renderPlaylist(list) {
+      playlistUI.innerHTML = '';
+      list.forEach((track, index) => {
+        const li = document.createElement('li');
+        li.textContent = track.name;
+        li.addEventListener('click', () => {
+          currentIndex = index;
+          loadTrack();
+          playTrack();
+          highlightCurrent();
+        });
+        playlistUI.appendChild(li);
+      });
+      highlightCurrent();
+    }
+
+    function loadTrack() {
+      if (playlist[currentIndex]) {
+        audio.src = playlist[currentIndex].url;
+      }
+    }
+
+    function playTrack() {
+      audio.play();
+    }
+
+    playBtn.addEventListener('click', () => {
+      if (audio.paused) {
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentIndex < playlist.length - 1) {
+        currentIndex++;
+        loadTrack();
+        playTrack();
+        highlightCurrent();
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        currentIndex--;
+        loadTrack();
+        playTrack();
+        highlightCurrent();
+      }
+    });
+
+    volume.addEventListener('input', () => {
+      audio.volume = volume.value;
+    });
+
+    search.addEventListener('input', () => {
+      const term = search.value.toLowerCase();
+      const filtered = playlist.filter(track =>
+        track.name.toLowerCase().includes(term) ||
+        track.artist.toLowerCase().includes(term) ||
+        track.genre.toLowerCase().includes(term)
+      );
+      renderPlaylist(filtered);
+    });
+
+    function highlightCurrent() {
+      const items = playlistUI.querySelectorAll('li');
+      items.forEach((li, index) => {
+        li.classList.toggle('active', index === currentIndex);
+      });
+    }
+  </script>
+</body>
+</html>
